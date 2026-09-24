@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مذكرتي الثورية مع ورقة الرسم</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            margin: 0;
+            padding: 20px;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        h1 {
+            text-align: center;
+            color: #a855f7;
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        /* شاشة القفل */
+        .lock-box {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .lock-box input, .settings-box input {
+            width: 100%;
+            padding: 14px;
+            font-size: 22px;
+            text-align: center;
+            letter-spacing: 8px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: #fff;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .lock-box input:focus, .settings-box input:focus {
+            border-color: #a855f7;
+        }
+        /* تبويبات التنقل (مذكرات / رسم) */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .tab-btn.active-tab {
+            background: #9333ea;
+            color: white;
+            border-color: #a855f7;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active-content {
+            display: block;
+        }
+        /* لوحة الرسم */
+        .drawing-container {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            background: #ffffff;
+            cursor: crosshair;
+            width: 100%;
+            height: 220px;
+        }
+        .drawing-tools {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            background: #1e293b;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .color-picker {
+            display: flex;
+            gap: 4px;
+        }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        /* صندوق المساعد الذكي المصغر */
+        .assistant-box {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(59, 130, 246, 0.15));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .assistant-avatar {
+            font-size: 24px;
+            background: rgba(168, 85, 247, 0.2);
+            padding: 4px;
+            border-radius: 50%;
+        }
+        /* عناصر الإدخال والأزرار العامة */
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: #fff;
+            border-radius: 12px;
+            outline: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #a855f7;
+        }
+        textarea {
+            resize: none;
+            height: 85px;
+        }
+        .mood-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background: #0f172a;
+            padding: 6px;
+            border-radius: 12px;
+        }
+        .mood-option {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+        .mood-option.selected {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.2);
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+            margin-bottom: 6px;
+        }
+        button:hover { opacity: 0.9; }
+        .secondary-btn {
+            background: #334155;
+            box-shadow: none;
+        }
+        .secondary-btn:hover { background: #475569; }
+        /* بطاقات المذكرات */
+        .diary-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .diary-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 4px;
+        }
+        .diary-text {
+            font-size: 13px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            color: #e2e8f0;
+        }
+        .delete-btn {
+            background: none;
+            color: #f87171;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 0;
+            width: auto;
+            margin-top: 6px;
+            box-shadow: none;
+        }
+        .actions-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 1. شاشة القفل السري -->
+        <div id="lockScreen" class="screen active">
+            <h1>🔒 الأمان الذكي</h1>
+            <div class="lock-box">
+                <p style="color: #94a3b8; margin-bottom: 15px; font-size:14px;">أدخل رمز الدخول السري (افتراضي: 1234):</p>
+                <input type="password" id="pinInput" maxlength="6" placeholder="••••">
+                <button onclick="checkPin()">فك القفل</button>
+            </div>
+        </div>
+
+        <!-- 2. الشاشة الرئيسية -->
+        <div id="diaryScreen" class="screen">
+            <h1>📖 مذكرتي ولوحة الرسم</h1>
+            
+            <!-- أزرار التبويب بين المذكرات ورقة الرسم -->
+            <div class="tabs">
+                <button class="tab-btn active-tab" onclick="switchTab('notes')">📝 كتابة مذكرات</button>
+                <button class="tab-btn" onclick="switchTab('draw')">🎨 ورقة الرسم</button>
+            </div>
+
+            <!-- محتوى المذكرات -->
+            <div id="notesContent" class="tab-content active-content">
+                <div class="assistant-box">
+                    <div class="assistant-avatar">🤖</div>
+                    <div class="assistant-text" id="assistantTip">
+                        أهلاً بك يا راسم! استمتع بتدوين أفكارك ورسم إبداعاتك.
+                    </div>
+                </div>
+
+                <div class="mood-selector">
+                    <span class="mood-option selected" onclick="setMood('😄', this)">😄</span>
+                    <span class="mood-option" onclick="setMood('😌', this)">😌</span>
+                    <span class="mood-option" onclick="setMood('🚀', this)">🚀</span>
+                    <span class="mood-option" onclick="setMood('😴', this)">😴</span>
+                    <span class="mood-option" onclick="setMood('💡', this)">💡</span>
+                </div>
+                <textarea id="diaryInput" placeholder="اكتب فكرتك أو خاطرتك هنا..."></textarea>
+                <button onclick="addDiary()">✨ حفظ المذكرة</button>
+
+                <input type="text" id="searchInput" placeholder="🔍 ابحث في مذكراتك..." oninput="filterDiaries()" style="margin-top: 8px;">
+                <div id="diaryList" style="max-height: 160px; overflow-y: auto; padding-left: 5px; margin-top: 8px;"></div>
+            </div>
+
+            <!-- محتوى ورقة الرسم -->
+            <div id="drawContent" class="tab-content">
+                <div class="drawing-container">
+                    <canvas id="paintCanvas"></canvas>
+                    <div class="drawing-tools">
+                        <div class="color-picker">
+                            <div class="color-dot" style="background: #000;" onclick="setDrawColor('#000')"></div>
+                            <div class="color-dot" style="background: #ef4444;" onclick="setDrawColor('#ef4444')"></div>
+                            <div class="color-dot" style="background: #3b82f6;" onclick="setDrawColor('#3b82f6')"></div>
+                            <div class="color-dot" style="background: #10b981;" onclick="setDrawColor('#10b981')"></div>
+                        </div>
+                        <button class="secondary-btn" onclick="clearCanvas()" style="width: auto; padding: 4px 10px; font-size: 11px;">مسح اللوحة 🗑️</button>
+                    </div>
+                </div>
+                <button onclick="saveDrawing()" style="background: #059669;">💾 حفظ الرسمة كمذكرة</button>
+            </div>
+
+            <div class="actions-row">
+                <button class="secondary-btn" onclick="openSettings()" style="font-size: 12px;">⚙️ الإعدادات</button>
+                <button class="secondary-btn" onclick="lockApp()" style="font-size: 12px;">🔒 إقفال</button>
+            </div>
+        </div>
+
+        <!-- 3. شاشة إعدادات الحماية -->
+        <div id="settingsScreen" class="screen">
+            <h1>⚙️ إعدادات الحماية</h1>
+            <div class="settings-box">
+                <p style="color: #94a3b8; font-size: 14px;">تغيير رمز الدخول السري:</p>
+                <input type="password" id="oldPinInput" placeholder="الرمز القديم" maxlength="6">
+                <input type="password" id="newPinInput" placeholder="الرمز الجديد" maxlength="6">
+                <button onclick="changePin()">تحديث الرمز</button>
+                <button class="secondary-btn" onclick="backToDiary()">رجوع</button>
+            </div>
+        </div>
+
+        <div class="footer">Made with Rassim & Canvas AI</div>
+    </div>
+
+    <script>
+        let currentMood = '😄';
+        let diaries = JSON.parse(localStorage.getItem('revolutionary_diaries')) || [];
+        let currentPin = localStorage.getItem('app_pin') || "1234";
+
+        // إعدادات ورقة الرسم (Canvas)
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+        let brushColor = '#000';
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = 200;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function startPosition(e) {
+            painting = true;
+            draw(e);
+        }
+
+        function endPosition() {
+            painting = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!painting) return;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = brushColor;
+
+            const rect = canvas.getBoundingClientRect();
+            let x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            let y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        function setDrawColor(color) {
+            brushColor = color;
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function saveDrawing() {
+            const dataURL = canvas.toDataURL();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-DZ') + ' | ' + now.toLocaleTimeString('ar-DZ', {hour: '2-digit', minute:'2-digit'});
+
+            diaries.unshift({
+                text: `<img src="${dataURL}" style="max-width:100%; border-radius:8px; border:1px solid #ccc;" alt="رسمة">`,
+                isHtml: true,
+                mood: '🎨',
+                date: dateStr
+            });
+
+            clearCanvas();
+            updateDiariesUI(diaries);
+            switchTab('notes');
+            alert('تم حفظ الرسمة في مذكراتك بنجاح! 🎨');
+        }
+
+        // التبديل بين التبويبات
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active-content'));
+
+            if (tabName === 'notes') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active-tab');
+                document.getElementById('notesContent').classList.add('active-content');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active-tab');
+                document.getElementById('drawContent').classList.add('active-content');
+                resizeCanvas();
+            }
+        }
+
+        function setMood(mood, element) {
+            document.querySelectorAll('.mood-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            currentMood = mood;
+        }
+
+        function checkPin() {
+            const inputPin = document.getElementById('pinInput').value;
+            if (inputPin === currentPin) {
+                document.getElementById('lockScreen').classList.remove('active');
+                document.getElementById('diaryScreen').classList.add('active');
+                document.getElementById('pinInput').value = '';
+                updateDiariesUI(diaries);
+            } else {
+                alert('الرمز السري غير صحيح!');
+                document.getElementById('pinInput').value = '';
+            }
+        }
+
+        function lockApp() {
+            document.getElementById('diaryScreen').classList.remove('active');
+            document.getElementById('lockScreen').classList.add('active');
+        }
+
+        function openSettings() {
+            document.getElementById('diaryScreen').classList.remove('active');
+            document.getElementById('settingsScreen').classList.add('active');
+        }
+
+        function backToDiary() {
+            document.getElementById('settingsScreen').classList.remove('active');
+            document.getElementById('diaryScreen').classList.add('active');
+            document.getElementById('oldPinInput').value = '';
+            document.getElementById('newPinInput').value = '';
+        }
+
+        function changePin() {
+            const oldPin = document.getElementById('oldPinInput').value;
+            const newPin = document.getElementById('newPinInput').value;
+
+            if (oldPin !== currentPin) {
+                alert('الرمز القديم غير صحيح!');
+                return;
+            }
+            if (newPin.length < 4) {
+                alert('الرمز الجديد يجب ألا يقل عن 4 أرقام/رموز!');
+                return;
+            }
+
+            currentPin = newPin;
+            localStorage.setItem('app_pin', currentPin);
+            alert('تم تغيير الرمز السري بنجاح! 🔒');
+            backToDiary();
+        }
+
+        function addDiary() {
+            const text = document.getElementById('diaryInput').value.trim();
+            if (text === '') {
+                alert('عذراً، لا يمكنك حفظ مذكرة فارغة!');
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-DZ') + ' | ' + now.toLocaleTimeString('ar-DZ', {hour: '2-digit', minute:'2-digit'});
+
+            diaries.unshift({
+                text: text,
+                isHtml: false,
+                mood: currentMood,
+                date: dateStr
+            });
+
+            document.getElementById('diaryInput').value = '';
+            updateDiariesUI(diaries);
+        }
+
+        function deleteDiary(index) {
+            if (confirm('هل أنت متأكد من حذف هذه المذكرة؟')) {
+                diaries.splice(index, 1);
+                updateDiariesUI(diaries);
+            }
+        }
+
+        function filterDiaries() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = diaries.filter(item => !item.isHtml && item.text.toLowerCase().includes(query));
+            updateDiariesUI(filtered);
+        }
+
+        function updateDiariesUI(listToRender) {
+            const listContainer = document.getElementById('diaryList');
+            listContainer.innerHTML = '';
+
+            if (listToRender.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #64748b; font-size: 11px;">لا توجد مذكرات...</p>';
+                return;
+            }
+
+            listToRender.forEach((item, index) => {
+                const originalIndex = diaries.indexOf(item);
+                const div = document.createElement('div');
+                div.className = 'diary-item';
+                
+                let contentHTML = item.isHtml ? item.text : `<div class="diary-text">${item.text}</div>`;
+
+                div.innerHTML = `
+                    <div class="diary-header">
+                        <span>${item.mood} &nbsp; ${item.date}</span>
+                    </div>
+                    ${contentHTML}
+                    <button class="delete-btn" onclick="deleteDiary(${originalIndex})">حذف نهائي</button>
+                `;
+                listContainer.appendChild(div);
+            });
+
+            localStorage.setItem('revolutionary_diaries', JSON.stringify(diaries));
+        }
+    </script>
+
+</body>
+</html>
